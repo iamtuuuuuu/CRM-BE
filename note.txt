@@ -1,0 +1,12 @@
+- trigger:
+        + them role user cho user khi dang ky
+        + them role-campaign cho admin khi add campaign
+        + them customer contact cho user khi dang ky
+
+- task customer
++ add customer
++ add customer to campaign
++ edit customer
++ add problem for employee
++ send email
++ get all email of employee sent

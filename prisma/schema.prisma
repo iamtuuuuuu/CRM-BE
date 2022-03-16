@@ -1,0 +1,203 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator nestgraphql {
+  provider = "node node_modules/prisma-nestjs-graphql"
+  output   = "../src/@generated/prisma-nestjs-graphql"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model Department {
+  id        Int        @id @default(autoincrement())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  name      String
+  Employee  Employee[]
+}
+
+model Employee {
+  id           Int            @id @default(autoincrement())
+  createdAt    DateTime       @default(now())
+  name         String
+  email        String         @unique
+  phoneNumber  String         @unique
+  password     String
+  status       String?        @default("active")
+  departmentId Int?
+  department   Department?    @relation(fields: [departmentId], references: [id])
+  EmailSent    EmailSent[]
+  EmployeeRole EmployeeRole[]
+  Problem      Problem[]
+}
+
+model Role {
+  id           Int            @id @default(autoincrement())
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  role         String
+  CampaignRole CampaignRole[]
+  EmployeeRole EmployeeRole[]
+}
+
+model EmployeeRole {
+  employeeId Int
+  roleId     Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, employeeId])
+}
+
+model Campaign {
+  id               Int                @id @default(autoincrement())
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  name             String
+  description      String?
+  campaignStatusId Int
+  linkImg          String?
+  campaignStatus   CampaignStatus     @relation(fields: [campaignStatusId], references: [id])
+  CampaignRole     CampaignRole[]
+  CampaignTask     CampaignTask[]
+  CustomerCampaign CustomerCampaign[]
+}
+
+model Task {
+  id           Int            @id @default(autoincrement())
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  name         String
+  description  String?
+  CampaignTask CampaignTask[]
+  ProductTask  ProductTask[]
+}
+
+model CampaignTask {
+  campaignId Int
+  taskId     Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  isDone     Boolean
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@id([campaignId, taskId])
+}
+
+model Product {
+  id          Int           @id @default(autoincrement())
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  name        String
+  description String?
+  linkImg     String?
+  ProductTask ProductTask[]
+}
+
+model ProductTask {
+  productId Int
+  taskId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@id([productId, taskId])
+}
+
+model CampaignStatus {
+  id        Int        @id @default(autoincrement())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  status    String
+  Campaign  Campaign[]
+}
+
+model CampaignRole {
+  campaignId Int
+  roleId     Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, campaignId])
+}
+
+model Customer {
+  id                Int                @id @default(autoincrement())
+  name              String
+  email             String             @unique
+  phoneNumber       String             @unique
+  dob               DateTime
+  gender            String
+  address           String?
+  customerContactId Int
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  status            String
+  CustomerContact   CustomerContact    @relation(fields: [customerContactId], references: [id])
+  CustomerCampaign  CustomerCampaign[]
+  EmailSent         EmailSent[]
+  Problem           Problem[]
+}
+
+model CustomerCampaign {
+  customerId Int
+  campaignId Int
+  status     String   @db.NVarChar(50)
+  note       String?
+  id         Int      @id(map: "CustomerCampaign_pk") @unique(map: "CustomerCampaign_id_uindex") @default(autoincrement())
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, campaignId], map: "CustomerCampaign_pkey")
+}
+
+model Problem {
+  id          Int      @id @default(autoincrement())
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  note        String?
+  customerId  Int
+  employeeId  Int
+  customer    Customer @relation(fields: [customerId], references: [id])
+  employee    Employee @relation(fields: [employeeId], references: [id])
+}
+
+model CustomerContact {
+  id        Int        @id @default(autoincrement())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  ref       String?
+  Customer  Customer[]
+}
+
+model EmailSent {
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  content    String
+  customerId Int
+  employeeId Int
+  id         Int      @id(map: "EmailSent_pk") @unique(map: "EmailSent_id2_uindex") @default(autoincrement())
+  customer   Customer @relation(fields: [customerId], references: [id])
+  employee   Employee @relation(fields: [employeeId], references: [id])
+}
+
+model sysdiagrams {
+  name         String @db.NVarChar(128)
+  principal_id Int
+  diagram_id   Int    @id(map: "PK__sysdiagr__C2B05B61D082E769") @default(autoincrement())
+  version      Int?
+  definition   Bytes?
+
+  @@unique([principal_id, name], map: "UK_principal_name")
+}
